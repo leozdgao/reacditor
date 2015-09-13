@@ -51,16 +51,17 @@ const newParagraph = () => {
 //   - highlighted text: 'hlt'
 //
 const renderInlineNode = (node) => {
-  switch (node.type) {
+  const content = node.get('content')
+  switch (node.get('type')) {
   case 'bold':
-    return <b>{node.content}</b>
+    return <b>{content}</b>
   case 'italistic':
-    return <em>{node.content}</em>
+    return <em>{content}</em>
   case 'hlt':
-    return <span className='hl-text'>{node.content}</span>
+    return <span className='hl-text'>{content}</span>
   case 'plain':
   default:
-    return <span>{node.content}</span>
+    return <span>{content}</span>
   }
 }
 
@@ -71,7 +72,7 @@ const renderInlineNode = (node) => {
 //   - inlines: [ nodes ]
 //
 const renderParagraph = (paragraph) => {
-  const inlines = paragraph.get('inlines').toArray().map(renderInlineNode)
+  const inlines = paragraph.get('inlines').map(renderInlineNode)
   return (
     <p key={paragraph.key}>{inlines}</p>
   )
@@ -93,9 +94,17 @@ const RichEditor = React.createClass({
     // immutable state
     return this.state !== nextState
   },
+  componentDidUpdate (prevProps, prevState) {
+    // move caret mannually
+    const sel = window.getSelection()
+    sel.collapse(React.findDOMNode(this), 1)
+  },
   render () {
     return (
-      <div contentEditable className='editor' onKeyDown={this._handleKeyDown} onKeyPress={this._handleKeyPress} onKeyUp={this._handleKeyUp}>
+      <div contentEditable className='editor'
+        onKeyDown={this._handleKeyDown}
+        onKeyPress={this._handleKeyPress}
+        onKeyUp={this._handleKeyUp}>
         {this._renderContent()}
       </div>
     )
@@ -117,7 +126,7 @@ const RichEditor = React.createClass({
     const activeInlineIndex = currentParagraph.get('activeInlineIndex')
     const currentInline = currentParagraph.getIn([ 'inlines', activeInlineIndex ])
     const content = currentInline.get('content')
-    const input = String.fromCharCode(e.keyCode)
+    const input = String.fromCharCode(e.charCode)
 
     this.setState({
       contentStructure: contentStructure.setIn(
@@ -130,6 +139,9 @@ const RichEditor = React.createClass({
   },
   _handleKeyUp (e) {
     // console.log('up')
+  },
+  _handleInput (e) {
+    // console.log('input')
   }
 })
 
